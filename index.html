@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart To-Do List</title>
+    <link rel="icon" href="https://static.vecteezy.com/system/resources/thumbnails/003/529/153/small_2x/business-to-do-list-flat-icon-modern-style-free-vector.jpg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px 0;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .toggle-calendar-btn {
+            background: #6e8efb;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .toggle-calendar-btn:hover {
+            background: #5a7dfa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .calendar-container.hidden {
+            display: none;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-header button {
+            background: #6e8efb;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-header button:hover {
+            background: #5a7dfa;
+            transform: scale(1.1);
+        }
+
+        .calendar-header h2 {
+            font-size: 1.5rem;
+            color: #444;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-name {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px 0;
+            color: #6e8efb;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 10px 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: #f0f4ff;
+        }
+
+        .calendar-day.selected {
+            background: #6e8efb;
+            color: white;
+        }
+
+        .calendar-day.other-month {
+            color: #aaa;
+        }
+
+        .calendar-day.has-tasks::after {
+            content: "";
+            display: block;
+            width: 6px;
+            height: 6px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            margin: 3px auto 0;
+        }
+
+        .tasks-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-display {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #444;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f4ff;
+        }
+
+        .task-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .task-form input, .task-form textarea, .task-form select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .task-form textarea {
+            grid-column: 1 / -1;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .task-form button {
+            background: #6e8efb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .task-form button:hover {
+            background: #5a7dfa;
+            transform: translateY(-2px);
+        }
+
+        .tasks-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .task-item {
+            background: #f9fbff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #6e8efb;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-time {
+            font-weight: bold;
+            color: #6e8efb;
+            background: #e6ecff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .task-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-left: 10px;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+        
+        .task-actions button:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .edit-btn {
+            color: #4CAF50;
+        }
+
+        .task-description {
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .alarm-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            grid-column: 1 / -1;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .alarm-section h3 {
+            margin-bottom: 15px;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alarm-section h3::before {
+            content: "⏰";
+            font-size: 1.5rem;
+        }
+
+        .alarm-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .alarm-controls select, .alarm-controls button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .alarm-controls button {
+            background: #ff9f43;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .alarm-controls button:hover {
+            background: #ff8c2a;
+            transform: translateY(-2px);
+        }
+
+        .alarm-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f0f4ff;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .task-analysis {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            grid-column: 1 / -1;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-analysis h3 {
+            margin-bottom: 15px;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-analysis h3::before {
+            content: "📊";
+            font-size: 1.5rem;
+        }
+
+        .analysis-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .analysis-controls button {
+            padding: 8px 15px;
+            background: #6e8efb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .analysis-controls button:hover {
+            background: #5a7dfa;
+            transform: translateY(-2px);
+        }
+
+        .task-analysis-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .day-tasks {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .day-tasks:last-child {
+            border-bottom: none;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9ff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .task-count {
+            background: #6e8efb;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .alarm-active {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .alarm-inactive {
+            color: #e74c3c;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-state img {
+            width: 100px;
+            opacity: 0.5;
+            margin-bottom: 15px;
+        }
+
+        .edit-form {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .edit-form-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .edit-form h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input[type="time"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .form-actions button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .save-edit-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .save-edit-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .cancel-edit-btn {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        
+        .cancel-edit-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .task-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Smart To-Do List</h1>
+            <button id="toggleCalendarBtn" class="toggle-calendar-btn">Hide Calendar</button>
+            <p class="tagline">Organize your work with calendar integration and smart alarms</p>
+        </header>
+        
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button id="prev-month">&#8249;</button>
+                <h2 id="current-month">April 2023</h2>
+                <button id="next-month">&#8250;</button>
+            </div>
+            <div class="calendar-grid" id="calendar-days">
+                <!-- Calendar days will be generated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="tasks-container">
+            <h2 class="date-display" id="selected-date">Today, April 15, 2023</h2>
+            
+            <form class="task-form" id="task-form">
+                <input type="time" id="task-time" required>
+                <select id="task-priority">
+                    <option value="low">Low Priority</option>
+                    <option value="medium" selected>Medium Priority</option>
+                    <option value="high">High Priority</option>
+                </select>
+                <button type="submit">Add Task</button>
+                <textarea id="task-description" placeholder="Task description..." required></textarea>
+            </form>
+            
+            <div class="tasks-list" id="tasks-list">
+                <!-- Tasks will be added here dynamically -->
+            </div>
+        </div>
+        
+        <div class="alarm-section">
+            <h3>Alarm Settings</h3>
+            <div class="alarm-controls">
+                <select id="alarm-sound">
+                    <option value="bell">Bell</option>
+                    <option value="chime" selected>Chime</option>
+                    <option value="beep">Beep</option>
+                </select>
+                <button id="test-alarm">Test Alarm</button>
+                <button id="set-alarm">Set Alarm for Next Task</button>
+            </div>
+            <div class="alarm-status" id="alarm-status">
+                <span>Alarm Status:</span>
+                <span class="alarm-inactive">No active alarms</span>
+            </div>
+        </div>
+
+        <div class="task-analysis">
+            <h3>Task Analysis</h3>
+            <div class="analysis-controls">
+                <button id="show-all-tasks">Show All Tasks</button>
+                <button id="show-this-month">This Month</button>
+                <button id="show-next-week">Next 7 Days</button>
+            </div>
+            <div class="task-analysis-list" id="task-analysis-list">
+                <!-- Task analysis will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import database functions
+        import {
+            initDB,
+            saveTask as dbSaveTask,
+            getAllTasks,
+            getTasksByDate,
+            deleteTask as dbDeleteTask,
+            toggleTaskCompletion as dbToggleTask
+        } from './db.js';
+        
+        // Track database initialization
+        let dbInitialized = false;
+        
+        // Initialize the database when the app starts
+        async function initializeApp() {
+            try {
+                await initDB();
+                dbInitialized = true;
+                console.log('Database initialized successfully');
+                // Load tasks for the current date
+                await loadTasksForDate(selectedDate);
+            } catch (error) {
+                console.error('Failed to initialize database:', error);
+                // Show error to user
+                alert('Failed to initialize the database. Please refresh the page.');
+            }
+        }
+        // Current date and calendar state
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let tasks = {}; // Will be populated from IndexedDB
+        let activeAlarm = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize the database and load tasks
+            await initializeApp();
+            renderCalendar();
+            renderTasks();
+            updateSelectedDateDisplay();
+            
+            // Event listeners
+            document.getElementById('prev-month').addEventListener('click', prevMonth);
+            document.getElementById('next-month').addEventListener('click', nextMonth);
+            document.getElementById('task-form').addEventListener('submit', addTask);
+            document.getElementById('test-alarm').addEventListener('click', testAlarm);
+            document.getElementById('set-alarm').addEventListener('click', setAlarmForNextTask);
+            document.getElementById('toggleCalendarBtn').addEventListener('click', toggleCalendar);
+            
+            // Task analysis event listeners
+            document.getElementById('show-all-tasks').addEventListener('click', () => showTaskAnalysis('all'));
+            document.getElementById('show-this-month').addEventListener('click', () => showTaskAnalysis('month'));
+            document.getElementById('show-next-week').addEventListener('click', () => showTaskAnalysis('week'));
+            
+            // Check for any active alarms on page load
+            checkActiveAlarms();
+            
+            // Initialize the app
+            initializeApp().then(() => {
+                // Show all tasks by default
+                showTaskAnalysis('all');
+            });
+        });
+
+        // Calendar functions
+        function renderCalendar() {
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
+            
+            // Add day names
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day-name';
+                dayElement.textContent = day;
+                calendarDays.appendChild(dayElement);
+            });
+            
+            // Update month display
+            document.getElementById('current-month').textContent = 
+                currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            // Get first day of month and days in month
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startingDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day other-month';
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = i;
+                
+                // Check if this day has tasks
+                const dateStr = formatDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), i));
+                if (tasks[dateStr] && tasks[dateStr].length > 0) {
+                    dayElement.classList.add('has-tasks');
+                }
+                
+                // Check if this is the selected day
+                if (selectedDate.toDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), i).toDateString()) {
+                    dayElement.classList.add('selected');
+                }
+                
+                // Add click event
+                dayElement.addEventListener('click', () => selectDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), i)));
+                
+                calendarDays.appendChild(dayElement);
+            }
+        }
+
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            renderCalendar();
+            renderTasks();
+            updateSelectedDateDisplay();
+        }
+
+        function updateSelectedDateDisplay() {
+            const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+            document.getElementById('selected-date').textContent = selectedDate.toLocaleDateString('en-US', options);
+        }
+
+        // Toggle calendar visibility
+        function toggleCalendar() {
+            const calendarContainer = document.querySelector('.calendar-container');
+            const toggleBtn = document.getElementById('toggleCalendarBtn');
+            
+            calendarContainer.classList.toggle('hidden');
+            
+            if (calendarContainer.classList.contains('hidden')) {
+                toggleBtn.textContent = 'Show Calendar';
+                // Adjust grid layout when calendar is hidden
+                document.querySelector('.container').style.gridTemplateColumns = '1fr';
+            } else {
+                toggleBtn.textContent = 'Hide Calendar';
+                // Restore original grid layout
+                document.querySelector('.container').style.gridTemplateColumns = '1fr 2fr';
+            }
+        }
+
+        // Task functions
+        async function addTask(e) {
+            e.preventDefault();
+            
+            if (!dbInitialized) {
+                console.error('Database not initialized');
+                return;
+            }
+
+            const time = document.getElementById('task-time').value;
+            const description = document.getElementById('task-description').value;
+            const priority = document.getElementById('task-priority').value;
+            const dateStr = formatDate(selectedDate);
+            
+            const task = {
+                time,
+                description,
+                priority,
+                completed: false,
+                date: dateStr,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await dbSaveTask(task);
+                await loadTasksForDate(selectedDate);
+                renderCalendar();
+                // Clear the form
+                e.target.reset();
+            } catch (error) {
+                console.error('Error adding task:', error);
+                alert('Failed to add task. Please try again.');
+            }
+        }
+
+        function renderTasks() {
+            const tasksList = document.getElementById('tasks-list');
+            const dateStr = formatDate(selectedDate);
+            
+            if (!tasks[dateStr] || tasks[dateStr].length === 0) {
+                tasksList.innerHTML = `
+                    <div class="empty-state">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTI0IDhWMzJMNDAgMjRMMjQgMTZWMzJIMjRWMzJaIiBmaWxsPSIjODg4Ii8+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjI0IiBzdHJva2U9IiM4ODgiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K" alt="No tasks">
+                        <h3>No tasks for this day</h3>
+                        <p>Add a task using the form above</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort tasks by time
+            tasks[dateStr].sort((a, b) => a.time.localeCompare(b.time));
+            
+            tasksList.innerHTML = '';
+            tasks[dateStr].forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
+                taskElement.setAttribute('data-id', task.id);
+                taskElement.innerHTML = `
+                    <div class="task-header">
+                        <div class="task-time">${formatTime(task.time)}</div>
+                        <div class="task-actions">
+                            <button class="complete-btn" data-id="${task.id}" title="${task.completed ? 'Mark as incomplete' : 'Mark as complete'}">${task.completed ? '↶' : '✓'}</button>
+                            <button class="edit-btn" data-id="${task.id}" title="Edit task">✎</button>
+                            <button class="delete-btn" data-id="${task.id}" title="Delete task">✕</button>
+                        </div>
+                    </div>
+                    <div class="task-description">${task.description}</div>
+                    <div class="task-priority ${task.priority}">${task.priority}</div>
+                `;
+                
+                tasksList.appendChild(taskElement);
+            });
+            
+            // Add event listeners for task actions
+            document.querySelectorAll('.complete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => toggleTaskComplete(parseInt(e.target.closest('button').dataset.id)));
+            });
+            
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => openEditForm(parseInt(e.target.closest('button').dataset.id)));
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => deleteTask(parseInt(e.target.closest('button').dataset.id)));
+            });
+        }
+
+        async function toggleTaskComplete(taskId) {
+            if (!dbInitialized) {
+                console.error('Database not initialized');
+                return;
+            }
+            
+            try {
+                await dbToggleTask(taskId);
+                await loadTasksForDate(selectedDate);
+            } catch (error) {
+                console.error('Error toggling task completion:', error);
+                alert('Failed to update task status. Please try again.');
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if (!dbInitialized) {
+                console.error('Database not initialized');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+            
+            try {
+                await dbDeleteTask(taskId);
+                await loadTasksForDate(selectedDate);
+                renderCalendar();
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                alert('Failed to delete task. Please try again.');
+            }
+        }
+
+        async function loadTasksForDate(date) {
+            if (!dbInitialized) return;
+            
+            try {
+                const dateStr = formatDate(date);
+                const tasksForDate = await getTasksByDate(dateStr);
+                
+                // Update the tasks object with the current date's tasks
+                tasks = {};
+                tasks[dateStr] = tasksForDate;
+                
+                // Render the tasks
+                renderTasks();
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                alert('Failed to load tasks. Please refresh the page.');
+            }
+        }
+
+        // Edit task functions
+        async function openEditForm(taskId) {
+            if (!dbInitialized) {
+                console.error('Database not initialized');
+                return;
+            }
+            
+            try {
+                // Get all tasks to find the one we want to edit
+                const allTasks = await getAllTasks();
+                const task = allTasks.find(t => t.id === taskId);
+                
+                if (!task) {
+                    console.error('Task not found');
+                    return;
+                }
+                
+                // Create edit form HTML
+                const editForm = document.createElement('div');
+                editForm.className = 'edit-form';
+                editForm.innerHTML = `
+                    <div class="edit-form-content">
+                        <h3>Edit Task</h3>
+                        <div class="form-group">
+                            <label for="edit-time">Time:</label>
+                            <input type="time" id="edit-time" value="${task.time || '12:00'}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-description">Description:</label>
+                            <textarea id="edit-description" required>${task.description || ''}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-priority">Priority:</label>
+                            <select id="edit-priority">
+                                <option value="low" ${(!task.priority || task.priority === 'low') ? 'selected' : ''}>Low</option>
+                                <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                                <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="save-edit-btn">Save</button>
+                            <button type="button" class="cancel-edit-btn">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add the form to the page
+                document.body.appendChild(editForm);
+                
+                // Add event listeners for the form
+                const saveBtn = editForm.querySelector('.save-edit-btn');
+                const cancelBtn = editForm.querySelector('.cancel-edit-btn');
+                
+                const closeForm = () => {
+                    document.body.removeChild(editForm);
+                };
+                
+                saveBtn.addEventListener('click', async () => {
+                    const timeInput = document.getElementById('edit-time');
+                    const descriptionInput = document.getElementById('edit-description');
+                    const priorityInput = document.getElementById('edit-priority');
+                    
+                    if (!timeInput.value || !descriptionInput.value.trim()) {
+                        alert('Please fill in all required fields');
+                        return;
+                    }
+                    
+                    const updatedTask = {
+                        ...task,
+                        id: taskId, // Ensure we keep the same ID
+                        time: timeInput.value,
+                        description: descriptionInput.value.trim(),
+                        priority: priorityInput.value,
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    try {
+                        await dbSaveTask(updatedTask);
+                        await loadTasksForDate(selectedDate);
+                        closeForm();
+                    } catch (error) {
+                        console.error('Error updating task:', error);
+                        alert('Failed to update task. Please try again.');
+                    }
+                });
+                
+                cancelBtn.addEventListener('click', closeForm);
+                
+                // Close when clicking outside the form
+                editForm.addEventListener('click', (e) => {
+                    if (e.target === editForm) {
+                        closeForm();
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error opening edit form:', error);
+                alert('Failed to open edit form. Please try again.');
+            }
+        }
+        
+        // Alarm functions
+        function testAlarm() {
+            playAlarmSound();
+        }
+
+        function setAlarmForNextTask() {
+            // Clear any existing alarm
+            if (activeAlarm) {
+                clearTimeout(activeAlarm);
+            }
+            
+            const dateStr = formatDate(selectedDate);
+            if (!tasks[dateStr] || tasks[dateStr].length === 0) {
+                alert('No tasks for the selected date!');
+                return;
+            }
+            
+            // Find the next upcoming task
+            const now = new Date();
+            const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            const upcomingTasks = tasks[dateStr]
+                .filter(task => !task.completed && task.time > currentTime)
+                .sort((a, b) => a.time.localeCompare(b.time));
+            
+            if (upcomingTasks.length === 0) {
+                alert('No upcoming tasks for today!');
+                return;
+            }
+            
+            const nextTask = upcomingTasks[0];
+            const alarmTime = new Date();
+            const [hours, minutes] = nextTask.time.split(':');
+            alarmTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            
+            // Calculate the delay in milliseconds
+            const delay = alarmTime.getTime() - now.getTime();
+            
+            if (delay <= 0) {
+                alert('The next task is already in the past!');
+                return;
+            }
+            
+            // Set the alarm
+            activeAlarm = setTimeout(() => {
+                playAlarmSound();
+                alert(`Alarm! Time for: ${nextTask.description}`);
+                updateAlarmStatus('No active alarms', 'alarm-inactive');
+                activeAlarm = null;
+            }, delay);
+            
+            updateAlarmStatus(`Alarm set for ${formatTime(nextTask.time)}`, 'alarm-active');
+        }
+
+        function playAlarmSound() {
+            // In a real application, you would play an actual sound file
+            // For this demo, we'll use the Web Audio API to generate a simple tone
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 800;
+            gainNode.gain.value = 0.3;
+            
+            oscillator.start();
+            
+            setTimeout(() => {
+                oscillator.stop();
+            }, 1000);
+        }
+
+        function checkActiveAlarms() {
+            // In a real application, you would check for any alarms that should be active
+            // For this demo, we'll just show that no alarms are active
+            updateAlarmStatus('No active alarms', 'alarm-inactive');
+        }
+
+        function updateAlarmStatus(message, className) {
+            const alarmStatus = document.getElementById('alarm-status');
+            alarmStatus.innerHTML = `
+                <span>Alarm Status:</span>
+                <span class="${className}">${message}</span>
+            `;
+        }
+
+        // Utility functions
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function formatTime(timeString) {
+            if (!timeString) return '';
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        // Task analysis functions
+        function showTaskAnalysis(range = 'all') {
+            const analysisList = document.getElementById('task-analysis-list');
+            analysisList.innerHTML = '';
+            
+            // Get all task dates and sort them
+            const taskDates = Object.keys(tasks).filter(date => tasks[date].length > 0);
+            if (taskDates.length === 0) {
+                analysisList.innerHTML = '<p>No tasks found.</p>';
+                return;
+            }
+            
+            // Filter tasks based on the selected range
+            const now = new Date();
+            const filteredDates = taskDates.filter(dateStr => {
+                if (range === 'all') return true;
+                
+                const taskDate = new Date(dateStr);
+                const timeDiff = taskDate - now;
+                const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+                
+                if (range === 'week') {
+                    return daysDiff >= 0 && daysDiff <= 7; // Next 7 days
+                } else if (range === 'month') {
+                    return taskDate.getMonth() === now.getMonth() && 
+                           taskDate.getFullYear() === now.getFullYear();
+                }
+                return true;
+            });
+            
+            // Sort dates chronologically
+            filteredDates.sort((a, b) => new Date(a) - new Date(b));
+            
+            // Display tasks for each date
+            filteredDates.forEach(dateStr => {
+                const date = new Date(dateStr);
+                const dayTasks = tasks[dateStr];
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'day-tasks';
+                
+                // Format date for display
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = date.toLocaleDateString('en-US', options);
+                
+                dayElement.innerHTML = `
+                    <div class="day-header">
+                        <span>${formattedDate}</span>
+                        <span class="task-count">${dayTasks.length} task${dayTasks.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="day-tasks-list"></div>
+                `;
+                
+                const tasksList = dayElement.querySelector('.day-tasks-list');
+                
+                // Add tasks for this day
+                dayTasks.forEach(task => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
+                    taskElement.innerHTML = `
+                        <div class="task-time">${formatTime(task.time)}</div>
+                        <div class="task-description">${task.description}</div>
+                        <div class="task-priority ${task.priority}">${task.priority}</div>
+                    `;
+                    tasksList.appendChild(taskElement);
+                });
+                
+                analysisList.appendChild(dayElement);
+            });
+        }
+    </script>
+</body>
+</html>
